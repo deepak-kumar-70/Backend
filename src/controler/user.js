@@ -3,6 +3,7 @@ const jwt=require("jsonwebtoken")
 const multer  = require('multer')
 const path = require('path');
 const bcrypt = require("bcrypt");
+const nodemailer = require("nodemailer");
 const upload = multer({  
     storage : multer.diskStorage({
           destination: function (req, file, cb) {
@@ -45,17 +46,46 @@ const handleSignup=async(req, resp)=>{
         console.error(e);
     }
 }
-const handleSignupGet=async(req,res)=>{
+const handleGetAllData = async (req, resp) => {
+    try {
+      const data = await model.find();
+      const imagePaths = [];
+      let imageId;
+      let imagename;
+      for (const item of data) {
+         imagename = item.images;
+         imageId=item.id;
+        if (imagename) {
+          const imagepath = path.join(__dirname, '..', 'uploads', imagename);
+          imagePaths.push(imagepath);
+        }
+      }
+      if (imagePaths.length > 0) {
+    const isons=imagePaths[12]
+        resp.sendFile(isons) 
+      
+      console.log(imagePaths[12],imagePaths[13])
+       
+
+      } else {
+        resp.status(404).json({ message: 'No images found' });
+      }
+    } catch (error) {
+      resp.status(500).json({ message: 'Internal server error' });
+      console.error(error);
+    }
+  };
+const handleSignupGet=async(req,resp)=>{
     try{
         const userId = req.params.userId; 
         const user = await model.findById({ _id: userId });
         console.log(user,"hello")
         if (!user || !user.images) { 
-            return res.status(404).send('Image not found');
+            return resp.status(404).send('Image not found');
         }
-        res.setHeader('Content-Type', 'image/jpeg'); 
+        resp.setHeader('Content-Type', 'image/jpeg'); 
         const paths=path.join(__dirname,"..","uploads",user.images )
-        res.sendFile(paths); 
+        resp.sendFile(paths); 
         console.log(paths,"yes")
     }catch (e) {
         resp.status(500).json({ message: "Internal server error" });
@@ -91,5 +121,6 @@ module.exports={
     handleSignup,
     handleLogin,
     handleSignupGet,
+    handleGetAllData,
     upload
 };
